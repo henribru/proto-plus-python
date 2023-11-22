@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing_extensions import Final
+
 from .enums import Enum
 from .fields import Field
 from .fields import MapField
@@ -23,23 +25,23 @@ from .primitives import ProtoType
 from .version import __version__
 
 
-DOUBLE = ProtoType.DOUBLE
-FLOAT = ProtoType.FLOAT
-INT64 = ProtoType.INT64
-UINT64 = ProtoType.UINT64
-INT32 = ProtoType.INT32
-FIXED64 = ProtoType.FIXED64
-FIXED32 = ProtoType.FIXED32
-BOOL = ProtoType.BOOL
-STRING = ProtoType.STRING
-MESSAGE = ProtoType.MESSAGE
-BYTES = ProtoType.BYTES
-UINT32 = ProtoType.UINT32
-ENUM = ProtoType.ENUM
-SFIXED32 = ProtoType.SFIXED32
-SFIXED64 = ProtoType.SFIXED64
-SINT32 = ProtoType.SINT32
-SINT64 = ProtoType.SINT64
+DOUBLE: Final = ProtoType.DOUBLE
+FLOAT: Final = ProtoType.FLOAT
+INT64: Final = ProtoType.INT64
+UINT64: Final = ProtoType.UINT64
+INT32: Final = ProtoType.INT32
+FIXED64: Final = ProtoType.FIXED64
+FIXED32: Final = ProtoType.FIXED32
+BOOL: Final = ProtoType.BOOL
+STRING: Final = ProtoType.STRING
+MESSAGE: Final = ProtoType.MESSAGE
+BYTES: Final = ProtoType.BYTES
+UINT32: Final = ProtoType.UINT32
+ENUM: Final = ProtoType.ENUM
+SFIXED32: Final = ProtoType.SFIXED32
+SFIXED64: Final = ProtoType.SFIXED64
+SINT32: Final = ProtoType.SINT32
+SINT64: Final = ProtoType.SINT64
 
 
 __all__ = (

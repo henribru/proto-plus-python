@@ -16,8 +16,9 @@ import collections
 import collections.abc
 import copy
 import re
-from typing import List, Type
+from typing import List, Type, TypeVar, Optional, Type, Mapping, MutableMapping, Dict, TYPE_CHECKING, Union, Any, overload
 
+from typing_extensions import Literal
 from google.protobuf import descriptor_pb2
 from google.protobuf import message
 from google.protobuf.json_format import MessageToDict, MessageToJson, Parse
@@ -33,6 +34,8 @@ from proto.utils import has_upb
 
 
 _upb = has_upb()  # Important to cache result here.
+
+M = TypeVar("M", bound="Message")
 
 
 class MessageMeta(type):
@@ -309,7 +312,15 @@ class MessageMeta(type):
         except AttributeError:
             return dir(type)
 
-    def pb(cls, obj=None, *, coerce: bool = False):
+    @overload
+    def pb(
+        cls: Type[M], obj: None = None, *, coerce: bool = False
+    ) -> type[message.Message]: ...
+    @overload
+    def pb(cls: Type[M], obj: M, *, coerce: Literal[False] = False) -> message.Message: ...
+    @overload
+    def pb(cls: Type[M], obj: Union[M, MutableMapping, message.Message], *, coerce: Literal[True]) -> message.Message: ...
+    def pb(cls, obj: Optional[Union[M, MutableMapping, message.Message]] = None, *, coerce: bool = False) -> Union[type[message.Message], message.Message]:
         """Return the underlying protobuf Message class or instance.
 
         Args:
@@ -333,7 +344,7 @@ class MessageMeta(type):
                 )
         return obj._pb
 
-    def wrap(cls, pb):
+    def wrap(cls: Type[M], pb: message.Message) -> M:
         """Return a Message object that shallowly wraps the descriptor.
 
         Args:
@@ -345,7 +356,7 @@ class MessageMeta(type):
         super(cls, instance).__setattr__("_pb", pb)
         return instance
 
-    def serialize(cls, instance) -> bytes:
+    def serialize(cls: Type[M], instance: Union[M, MutableMapping, message.Message]) -> bytes:
         """Return the serialized proto.
 
         Args:
@@ -357,7 +368,7 @@ class MessageMeta(type):
         """
         return cls.pb(instance, coerce=True).SerializeToString()
 
-    def deserialize(cls, payload: bytes) -> "Message":
+    def deserialize(cls: Type[M], payload: bytes) -> M:
         """Given a serialized proto, deserialize it into a Message instance.
 
         Args:
@@ -370,15 +381,15 @@ class MessageMeta(type):
         return cls.wrap(cls.pb().FromString(payload))
 
     def to_json(
-        cls,
-        instance,
+        cls: Type[M],
+        instance: M,
         *,
-        use_integers_for_enums=True,
-        including_default_value_fields=True,
-        preserving_proto_field_name=False,
-        sort_keys=False,
-        indent=2,
-        float_precision=None,
+        use_integers_for_enums: bool = True,
+        including_default_value_fields: bool = True,
+        preserving_proto_field_name: bool = False,
+        sort_keys: bool = False,
+        indent: Optional[int] = 2,
+        float_precision: Optional[int] = None,
     ) -> str:
         """Given a message instance, serialize it to json
 
@@ -411,7 +422,7 @@ class MessageMeta(type):
             float_precision=float_precision,
         )
 
-    def from_json(cls, payload, *, ignore_unknown_fields=False) -> "Message":
+    def from_json(cls: Type[M], payload: str, *, ignore_unknown_fields: bool = False) -> M:
         """Given a json string representing an instance,
         parse it into a message.
 
@@ -429,14 +440,14 @@ class MessageMeta(type):
         return instance
 
     def to_dict(
-        cls,
-        instance,
+        cls: Type[M],
+        instance: M,
         *,
-        use_integers_for_enums=True,
-        preserving_proto_field_name=True,
-        including_default_value_fields=True,
-        float_precision=None,
-    ) -> "Message":
+        use_integers_for_enums: bool = True,
+        preserving_proto_field_name: bool = True,
+        including_default_value_fields: bool = True,
+        float_precision: Optional[int] = None,
+    ) -> Dict[str, Any]:
         """Given a message instance, return its representation as a python dict.
 
         Args:
@@ -467,7 +478,7 @@ class MessageMeta(type):
             float_precision=float_precision,
         )
 
-    def copy_from(cls, instance, other):
+    def copy_from(cls: Type[M], instance: M, other: Union[M, Mapping, message.Message]) -> None:
         """Equivalent for protobuf.Message.CopyFrom
 
         Args:
@@ -510,12 +521,13 @@ class Message(metaclass=MessageMeta):
         kwargs (dict): Keys and values corresponding to the fields of the
             message.
     """
+    _pb: message.Message
 
     def __init__(
         self,
-        mapping=None,
+        mapping: Optional[Union[M, MutableMapping, message.Message]] = None,
         *,
-        ignore_unknown_fields=False,
+        ignore_unknown_fields: bool = False,
         **kwargs,
     ):
         # We accept several things for `mapping`:
@@ -729,6 +741,11 @@ class Message(metaclass=MessageMeta):
         # Ask the other object.
         return NotImplemented
 
+    if TYPE_CHECKING:
+        # We need to hide __getattr__ from typecheckers,
+        # otherwise they allow you to access non-existing attributes.
+        __getattr__ = None
+
     def __getattr__(self, key):
         """Retrieve the given field's value.
 
@@ -768,6 +785,11 @@ class Message(metaclass=MessageMeta):
 
     def __repr__(self):
         return repr(self._pb)
+
+    if TYPE_CHECKING:
+        # We need to hide __setattr__ from typecheckers,
+        # otherwise they allow you to set non-existing attributes.
+        __setattr__ = None
 
     def __setattr__(self, key, value):
         """Set the value on the given field.
