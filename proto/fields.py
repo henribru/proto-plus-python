@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from enum import EnumMeta
-from typing import overload, TypeVar, MutableMapping, MutableSequence, TYPE_CHECKING, Generic, Any, Optional, Union, Type
+from typing import overload, TypeVar, MutableMapping, MutableSequence, TYPE_CHECKING, Generic, Any, Optional, Union, Type, NoReturn
 
 
 from typing_extensions import Literal
@@ -25,6 +25,7 @@ from proto.primitives import ProtoType
 
 if TYPE_CHECKING:
     from proto.message import Message
+    from proto.enums import Enum
 
 IntegerProtoType = Literal[
     ProtoType.INT64,
@@ -39,7 +40,13 @@ IntegerProtoType = Literal[
     ProtoType.SINT64,
 ]
 
-T = TypeVar("T", bound=Union[float, int, bool, str, bytes, "Message", EnumMeta])
+class Message:
+    ...
+    
+class Enum:
+    ...
+
+T = TypeVar("T", bound=Union[float, int, bool, str, bytes, "Message", "Enum"])
 
 class Field(Generic[T]):
     """A representation of a type of field in protocol buffers."""
@@ -48,46 +55,51 @@ class Field(Generic[T]):
     # The RepeatedField overrides this values.
     repeated = False
 
-    @overload
-    def __init__(
-        self: "Field[float]",
-        proto_type: Literal[ProtoType.DOUBLE, ProtoType.FLOAT],
-        *,
-        number: int,
-        oneof: Optional[str] = None,
-        json_name: Optional[str] = None,
-        optional: bool = False,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self: "Field[int]",
-        proto_type: IntegerProtoType,
-        *,
-        number: int,
-        oneof: Optional[str] = None,
-        json_name: Optional[str] = None,
-        optional: bool = False,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self: "Field[bool]",
-        proto_type: Literal[ProtoType.BOOL],
-        *,
-        number: int,
-        oneof: Optional[str] = None,
-        json_name: Optional[str] = None,
-        optional: bool = False,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self: "Field[str]",
-        proto_type: Literal[ProtoType.STRING],
-        *,
-        number: int,
-        oneof: Optional[str] = None,
-        json_name: Optional[str] = None,
-        optional: bool = False,
-    ) -> None: ...
+    # Field(ProtoType.DOUBLE) -> float
+    # @overload
+    # def __init__(
+    #     self: "Field[float]",
+    #     proto_type: Literal[ProtoType.DOUBLE, ProtoType.FLOAT],
+    #     *,
+    #     number: int,
+    #     oneof: Optional[str] = None,
+    #     json_name: Optional[str] = None,
+    #     optional: bool = False,
+    # ) -> None: ...
+    # # Field(ProtoType.INT64) -> int
+    # @overload
+    # def __init__(
+    #     self: "Field[int]",
+    #     proto_type: IntegerProtoType,
+    #     *,
+    #     number: int,
+    #     oneof: Optional[str] = None,
+    #     json_name: Optional[str] = None,
+    #     optional: bool = False,
+    # ) -> None: ...
+    # Field(ProtoType.BOOL) -> bool
+    # @overload
+    # def __init__(
+    #     self: "Field[bool]",
+    #     proto_type: Literal[ProtoType.BOOL],
+    #     *,
+    #     number: int,
+    #     oneof: Optional[str] = None,
+    #     json_name: Optional[str] = None,
+    #     optional: bool = False,
+    # ) -> None: ...
+    # # Field(ProtoType.STRING) -> string
+    # @overload
+    # def __init__(
+    #     self: "Field[str]",
+    #     proto_type: Literal[ProtoType.STRING],
+    #     *,
+    #     number: int,
+    #     oneof: Optional[str] = None,
+    #     json_name: Optional[str] = None,
+    #     optional: bool = False,
+    # ) -> None: ...
+    # # Field(ProtoType.BYTES) -> bytes
     @overload
     def __init__(
         self: "Field[bytes]",
@@ -98,74 +110,120 @@ class Field(Generic[T]):
         json_name: Optional[str] = None,
         optional: bool = False,
     ) -> None: ...
+    # # Field(ProtoType.MESSAGE, message=PlainProtobufMessage) -> Any
+    # @overload
+    # def __init__(
+    #     self: "Field[Any]",
+    #     proto_type: Literal[ProtoType.MESSAGE],
+    #     *,
+    #     number: int,
+    #     message: Type[message.Message],
+    #     oneof: Optional[str] = None,
+    #     json_name: Optional[str] = None,
+    #     optional: bool = False,
+    # ) -> None: ...
+    # Field(ProtoType.MESSAGE, message=int) -> NoReturn
+    # @overload
+    # def __init__(
+    #     self: Field[NoReturn],
+    #     proto_type: Literal[ProtoType.MESSAGE],
+    #     *,
+    #     number: int,
+    #     message: Type[Union[float, int, bool, str, bytes, "Enum"]],
+    #     #message: Union[Type[float], Type[int], Type[bool], Type[str], Type[bytes], Type["Enum"]],
+    #     oneof: Optional[str] = None,
+    #     json_name: Optional[str] = None,
+    #     optional: bool = False,
+    # ) -> None: ...
+    # Field(ProtoType.MESSAGE, message=ProtoPlusMessage) -> ProtoPlusMessage
+    # @overload
+    # def __init__(
+    #     self: "Field[T]",
+    #     proto_type: Literal[ProtoType.MESSAGE],
+    #     *,
+    #     number: int,
+    #     message: type[T],
+    #     oneof: Optional[str] = None,
+    #     json_name: Optional[str] = None,
+    #     optional: bool = False,
+    # ) -> None: ...
+    # # Field(ProtoType.ENUM, message=PlainProtobufEnum) -> Any
+    # @overload
+    # def __init__(
+    #     self: "Field[Any]",
+    #     proto_type: Literal[ProtoType.ENUM],
+    #     *,
+    #     number: int,
+    #     enum: type[EnumTypeWrapper],
+    #     oneof: Optional[str] = None,
+    #     json_name: Optional[str] = None,
+    #     optional: bool = False,
+    # ) -> None: ...
+    # Field(ProtoType.ENUM, enum=int) -> NoReturn
+    # @overload
+    # def __init__(
+    #     self: Field[NoReturn],
+    #     proto_type: Literal[ProtoType.ENUM],
+    #     *,
+    #     number: int,
+    #     # We can't include int or float here because those will match proto.Enum since it's an IntEnum.
+    #     enum: Type[Union[bool, str, bytes, "Message"]],
+    #     oneof: Optional[str] = None,
+    #     json_name: Optional[str] = None,
+    #     optional: bool = False,
+    # ) -> None: ...
+    # Field(ProtoType.ENUM, enum=ProtoPlusEnum) -> ProtoPlusEnum
+    # @overload
+    # def __init__(
+    #     self: "Field[T]",
+    #     proto_type: Literal[ProtoType.ENUM],
+    #     *,
+    #     number: int,
+    #     enum: type[T],
+    #     oneof: Optional[str] = None,
+    #     json_name: Optional[str] = None,
+    #     optional: bool = False,
+    # ) -> None: ...
+    # # Field(PlainProtobufMessage) -> Any
+    # @overload
+    # def __init__(
+    #     self: "Field[Any]",
+    #     proto_type: Type[message.Message],
+    #     *,
+    #     number: int,
+    #     oneof: Optional[str] = None,
+    #     json_name: Optional[str] = None,
+    #     optional: bool = False,
+    # ) -> None: ...
+    # # Field(PlainProtobufEnum) -> Any
+    # @overload
+    # def __init__(
+    #     self: "Field[Any]",
+    #     proto_type: Type[EnumTypeWrapper],
+    #     *,
+    #     number: int,
+    #     oneof: Optional[str] = None,
+    #     json_name: Optional[str] = None,
+    #     optional: bool = False,
+    # ) -> None: ...
+    # Field(int) -> NoReturn
+    # @overload
+    # def __init__(
+    #     self: Field[Any],
+    #     # We can't include int or float here because those will match proto.Enum since it's an IntEnum.
+    #     proto_type: Type[Union[bool, str, bytes]],
+    #     *,
+    #     number: int,
+    #     oneof: Optional[str] = None,
+    #     json_name: Optional[str] = None,
+    #     optional: bool = False,
+    # ) -> None: ...
+    # Field(ProtoPlusMessage) -> ProtoPlusMessage
+    # Field(ProtoPlusEnum) -> ProtoPlusEnum
     @overload
     def __init__(
-        self: "Field[Any]",
-        proto_type: Literal[ProtoType.MESSAGE],
-        *,
-        number: int,
-        message: type[message.Message],
-        oneof: Optional[str] = None,
-        json_name: Optional[str] = None,
-        optional: bool = False,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self: "Field[T]",
-        proto_type: Literal[ProtoType.MESSAGE],
-        *,
-        number: int,
-        # TODO: This accepts something like Field(ProtoType.MESSAGE, message=int)
-        message: type[T],
-        oneof: Optional[str] = None,
-        json_name: Optional[str] = None,
-        optional: bool = False,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self: "Field[Any]",
-        proto_type: Literal[ProtoType.ENUM],
-        *,
-        number: int,
-        enum: type[EnumTypeWrapper],
-        oneof: Optional[str] = None,
-        json_name: Optional[str] = None,
-        optional: bool = False,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self: "Field[T]",
-        proto_type: Literal[ProtoType.ENUM],
-        *,
-        number: int,
-        enum: type[T],
-        oneof: Optional[str] = None,
-        json_name: Optional[str] = None,
-        optional: bool = False,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self: "Field[Any]",
-        proto_type: Type[message.Message],
-        *,
-        number: int,
-        oneof: Optional[str] = None,
-        json_name: Optional[str] = None,
-        optional: bool = False,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self: "Field[Any]",
-        proto_type: Type[EnumTypeWrapper],
-        *,
-        number: int,
-        oneof: Optional[str] = None,
-        json_name: Optional[str] = None,
-        optional: bool = False,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self: "Field[T]",
+        self,
+        # Why doesn't bytes, float etc. match here?
         proto_type: Type[T],
         *,
         number: int,
@@ -173,35 +231,49 @@ class Field(Generic[T]):
         json_name: Optional[str] = None,
         optional: bool = False,
     ) -> None: ...
-    @overload
-    def __init__(
-        self: "Field[Any]",
-        proto_type: Literal[ProtoType.MESSAGE],
-        *,
-        number: int,
-        message: str,
-        oneof: Optional[str] = None,
-        json_name: Optional[str] = None,
-        optional: bool = False,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self: "Field[Any]",
-        proto_type: Literal[ProtoType.ENUM],
-        *,
-        number: int,
-        enum: str,
-        oneof: Optional[str] = None,
-        json_name: Optional[str] = None,
-        optional: bool = False,
-    ) -> None: ...
+    # Field(ProtoType.MESSAGE, message="ProtoPlusMessage") -> Any
+    # @overload
+    # def __init__(
+    #     self: "Field[Any]",
+    #     proto_type: Literal[ProtoType.MESSAGE],
+    #     *,
+    #     number: int,
+    #     message: str,
+    #     oneof: Optional[str] = None,
+    #     json_name: Optional[str] = None,
+    #     optional: bool = False,
+    # ) -> None: ...
+    # Field(ProtoType.ENUM, enum="ProtoPlusEnum") -> Any
+    # @overload
+    # def __init__(
+    #     self: "Field[Any]",
+    #     proto_type: Literal[ProtoType.ENUM],
+    #     *,
+    #     number: int,
+    #     enum: str,
+    #     oneof: Optional[str] = None,
+    #     json_name: Optional[str] = None,
+    #     optional: bool = False,
+    # ) -> None: ...
+    # Field("ProtoPlusMessage") -> Any
+    # Field("ProtoPlusEnum") -> Any
+    #@overload
+    # def __init__(
+    #     self: "Field[Any]",
+    #     proto_type: str,
+    #     *,
+    #     number: int,
+    #     oneof: Optional[str] = None,
+    #     json_name: Optional[str] = None,
+    #     optional: bool = False,
+    # ) -> None: ...
     def __init__(
         self,
-        proto_type: Union[ProtoType, Type["Message"], Type[message.Message], Type[EnumMeta], Type[EnumTypeWrapper], str],
+        proto_type: Union[ProtoType, Type["Message"], Type[message.Message], Type["Enum"], Type[EnumTypeWrapper], str],
         *,
         number: int,
         message: Optional[Union[Type["Message"], Type[message.Message], str]] = None,
-        enum: Optional[Union[Type[EnumMeta], Type[EnumTypeWrapper], str]] = None,
+        enum: Optional[Union[Type["Enum"], Type[EnumTypeWrapper], str]] = None,
         oneof: Optional[str] = None,
         json_name: Optional[str] = None,
         optional: bool = False
@@ -431,11 +503,11 @@ class RepeatedField(Field[T]):
     ) -> None: ...
     def __init__(
         self,
-        proto_type: Union[ProtoType, Type["Message"], Type[message.Message], Type[EnumMeta], Type[EnumTypeWrapper], str],
+        proto_type: Union[ProtoType, Type["Message"], Type[message.Message], Type["Enum"], Type[EnumTypeWrapper], str],
         *,
         number: int,
         message: Optional[Union[Type["Message"], Type[message.Message], str]] = None,
-        enum: Optional[Union[Type[EnumMeta], Type[EnumTypeWrapper], str]] = None,
+        enum: Optional[Union[Type["Enum"], Type[EnumTypeWrapper], str]] = None,
         oneof: Optional[str] = None,
         json_name: Optional[str] = None,
         optional: bool = False
@@ -628,11 +700,11 @@ class MapField(Field[V], Generic[K, V]):
     def __init__(
         self, 
         key_type: Literal[IntegerProtoType, ProtoType.STRING],
-        value_type: Union[ProtoType, Type["Message"], Type[message.Message], Type[EnumMeta], Type[EnumTypeWrapper], str],
+        value_type: Union[ProtoType, Type["Message"], Type[message.Message], Type["Enum"], Type[EnumTypeWrapper], str],
         *,
         number: int,
         message: Optional[Union[Type["Message"], Type[message.Message], str]] = None,
-        enum: Optional[Union[Type[EnumMeta], Type[EnumTypeWrapper], str]] = None
+        enum: Optional[Union[Type["Enum"], Type[EnumTypeWrapper], str]] = None
     ):
         super().__init__(value_type, number=number, message=message, enum=enum)
         self.map_key_type = key_type
